@@ -1,6 +1,11 @@
-import { LayoutDashboard, Users, Settings, Layers, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Layers, Newspaper, Contact, GraduationCap, FileText, CalendarDays, type LucideIcon } from "lucide-react";
 import { hasPermission, P } from "@/features/identity";
 import { SAMPLE_P } from "@/features/sample";
+import { NEWS_P } from "@/features/news";
+import { PERSONNEL_P } from "@/features/personnel";
+import { CURRICULUM_P } from "@/features/curriculum";
+import { EDOCUMENT_P } from "@/features/edocument";
+import { RESERVATION_P } from "@/features/reservation";
 
 export interface NavItem {
   /** i18n key */
@@ -16,6 +21,26 @@ export interface NavCrumb { title: string; href: string }
 
 export const sidebarGroups: NavGroup[] = [
   { label: "nav.group.overview", items: [{ title: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard }] },
+  {
+    label: "roles.module.news",
+    items: [{ title: "news.nav", href: "/admin/news", icon: Newspaper, permission: NEWS_P.newsRead }],
+  },
+  {
+    label: "roles.module.personnel",
+    items: [{ title: "personnel.nav", href: "/admin/personnel", icon: Contact, permission: PERSONNEL_P.personnelRead }],
+  },
+  {
+    label: "roles.module.curriculum",
+    items: [{ title: "curriculum.title", href: "/admin/curriculum", icon: GraduationCap, permission: CURRICULUM_P.curriculumRead }],
+  },
+  {
+    label: "roles.module.edocument",
+    items: [{ title: "edocument.title", href: "/admin/edocuments", icon: FileText, permission: EDOCUMENT_P.edocumentRead }],
+  },
+  {
+    label: "roles.module.reservation",
+    items: [{ title: "reservation.title", href: "/admin/reservations", icon: CalendarDays, permission: RESERVATION_P.reservationRead }],
+  },
   {
     label: "nav.group.sample",
     items: [{ title: "sample.nav", href: "/sample", icon: Layers, permission: SAMPLE_P.sampleRead }],
