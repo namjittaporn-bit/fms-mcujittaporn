@@ -1,0 +1,75 @@
+services:
+  # -------------------------------------------------------------
+  # PostgreSQL Database (Internal Network Only - No Exposed Ports)
+  # -------------------------------------------------------------
+  db:
+    image: postgres:17-alpine
+    container_name: fms_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fms_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_secure_password_in_env}
+      POSTGRES_DB: ${POSTGRES_DB:-fms_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal_net
+    # Anti-Cryptomining Resource Quota
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fms_user} -d ${POSTGRES_DB:-fms_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # Next.js Application (Non-root, Hardened Alpine Container)
+  # -------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fms_app_prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Bind to localhost only (reverse proxy like Nginx/Caddy forwards 80/443 to 127.0.0.1:3000)
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-fms_user}:${POSTGRES_PASSWORD:-change_this_secure_password_in_env}@db:5432/${POSTGRES_DB:-fms_prod}
+      AUTH_SECRET: ${AUTH_SECRET}
+      APP_URL: ${APP_URL:-https://your-domain.ac.th}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+    networks:
+      - internal_net
+    # Anti-Cryptomining Resource Quota
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+networks:
+  internal_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

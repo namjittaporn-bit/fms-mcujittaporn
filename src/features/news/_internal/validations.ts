@@ -13,7 +13,11 @@ export const newsStatusEnum = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const newsAttachmentInputSchema = z.object({
   id: z.string().uuid().optional(),
   fileName: z.string().min(1).max(255),
-  fileUrl: z.string().min(1).max(1000),
+  fileUrl: z
+    .string()
+    .min(1)
+    .max(1000)
+    .regex(/^(https?:\/\/|\/)/, "Invalid file URL scheme - must start with https://, http://, or /"),
   fileSize: z.number().int().nonnegative().optional(),
   mimeType: z.string().max(100).optional(),
 });
@@ -24,7 +28,12 @@ export const createNewsSchema = z.object({
   slug: z.string().min(1, "slug_required").max(255),
   contentTh: z.string().min(1, "contentTh_required"),
   contentEn: z.string().min(1, "contentEn_required"),
-  coverImageUrl: z.string().max(1000).optional().nullable(),
+  coverImageUrl: z
+    .string()
+    .max(1000)
+    .regex(/^(https?:\/\/|\/)/, "Invalid image URL scheme")
+    .optional()
+    .nullable(),
   category: newsCategoryEnum.default("GENERAL"),
   status: newsStatusEnum.default("DRAFT"),
   isPinned: z.boolean().default(false),

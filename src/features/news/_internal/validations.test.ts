@@ -60,4 +60,23 @@ describe("news validations", () => {
 
     expect(() => togglePinNewsSchema.parse({ id: "invalid-id", isPinned: true })).toThrow();
   });
+
+  it("createNewsSchema ปฏิเสธ URL ที่เป็นอันตราย (XSS schemes เช่น javascript:)", () => {
+    const malicious = {
+      ...validNews,
+      coverImageUrl: "javascript:alert('XSS')",
+    };
+    expect(() => createNewsSchema.parse(malicious)).toThrow();
+
+    const maliciousAttachment = {
+      ...validNews,
+      attachments: [
+        {
+          fileName: "malicious.pdf",
+          fileUrl: "javascript:evil()",
+        },
+      ],
+    };
+    expect(() => createNewsSchema.parse(maliciousAttachment)).toThrow();
+  });
 });

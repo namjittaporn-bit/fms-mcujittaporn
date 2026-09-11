@@ -32,8 +32,12 @@ export const approvalActionEnum = z.enum([
 ]);
 
 export const attachmentItemSchema = z.object({
-  fileName: z.string().min(1),
-  fileUrl: z.string().min(1),
+  fileName: z.string().min(1).max(255),
+  fileUrl: z
+    .string()
+    .min(1)
+    .max(2000)
+    .regex(/^(https?:\/\/|\/)/, "Invalid file URL scheme - must start with https://, http://, or /"),
   fileSize: z.number().optional(),
   fileType: z.string().optional(),
 });
