@@ -11,6 +11,7 @@ const PUBLIC_PREFIXES = [
   "/news",
   "/personnel",
   "/curriculum",
+  "/uploads/",
 ];
 const PUBLIC_EXACT = ["/"];
 const GUEST_ONLY = ["/login", "/forgot-password"];
