@@ -3,12 +3,30 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { PortalNavbar, type PortalNavbarProps } from "./portal-navbar";
 
 const setThemeMock = vi.fn();
+const signOutMock = vi.fn();
 let themeValue = "light";
 let mockPathname = "/";
 let mockSearchParams = new URLSearchParams();
+let mockSessionUser: { name: string; email: string; image?: string | null } | null = null;
+let mockSessionStatus = "unauthenticated";
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({ theme: themeValue, setTheme: setThemeMock }),
+}));
+
+vi.mock("next-auth/react", () => ({
+  signOut: (...args: unknown[]) => signOutMock(...args),
+}));
+
+vi.mock("@/hooks/use-session", () => ({
+  useAppSession: () => ({
+    status: mockSessionStatus,
+    user: mockSessionUser,
+    isAuthenticated: !!mockSessionUser,
+    roles: [],
+    permissions: [],
+    isSuperAdmin: false,
+  }),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -37,9 +55,12 @@ function baseProps(overrides: Partial<PortalNavbarProps> = {}): PortalNavbarProp
 describe("PortalNavbar", () => {
   beforeEach(() => {
     setThemeMock.mockClear();
+    signOutMock.mockClear();
     themeValue = "light";
     mockPathname = "/";
     mockSearchParams = new URLSearchParams();
+    mockSessionUser = null;
+    mockSessionStatus = "unauthenticated";
   });
 
   it("renders brand block with name, tagline and fallback icon", () => {
@@ -95,13 +116,47 @@ describe("PortalNavbar", () => {
     expect(setThemeMock).toHaveBeenCalledWith("dark");
   });
 
-  it("toggles mobile menu drawer on hamburger click", () => {
+  it("unauthenticated guest sees Staff Login button", () => {
+    render(<PortalNavbar {...baseProps({ locale: "th" })} />);
+    expect(screen.getByText("เข้าสู่ระบบ")).toBeTruthy();
+  });
+
+  it("authenticated user sees Avatar menu with user name and dropdown options", async () => {
+    mockSessionStatus = "authenticated";
+    mockSessionUser = {
+      name: "สมชาย ใจดี",
+      email: "somchai@example.com",
+      image: "/uploads/avatars/somchai.png",
+    };
+
+    render(<PortalNavbar {...baseProps({ locale: "th" })} />);
+    expect(screen.getByText("สมชาย ใจดี")).toBeTruthy();
+
+    const trigger = screen.getByRole("button", { name: /สมชาย ใจดี/ });
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+
+    expect(await screen.findByText("ระบบจัดการข้อมูล")).toBeTruthy();
+    expect(screen.getByText("โปรไฟล์ของฉัน")).toBeTruthy();
+
+    const signOutBtn = screen.getByText("ออกจากระบบ");
+    fireEvent.click(signOutBtn);
+    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: "/" });
+  });
+
+  it("toggles mobile menu drawer on hamburger click with user session", () => {
+    mockSessionStatus = "authenticated";
+    mockSessionUser = {
+      name: "อาจารย์กิตติ",
+      email: "kitti@example.com",
+    };
+
     render(<PortalNavbar {...baseProps({ locale: "th" })} />);
     const toggleBtn = screen.getByRole("button", { name: "เปิด/ปิดเมนู" });
     expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
 
     fireEvent.click(toggleBtn);
     expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByText("เข้าสู่ระบบบุคลากร")).toBeTruthy();
+    expect(screen.getAllByText("อาจารย์กิตติ").length).toBeGreaterThan(0);
+    expect(screen.getByText("kitti@example.com")).toBeTruthy();
   });
 });

@@ -4,8 +4,21 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ShieldCheck, Menu, X, GraduationCap } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
+import {
+  ShieldCheck,
+  Menu,
+  X,
+  GraduationCap,
+  LayoutDashboard,
+  User as UserIcon,
+  Settings as SettingsIcon,
+  LogOut,
+} from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { useAppSession } from "@/hooks/use-session";
+import { hasPermission, P } from "@/features/identity";
 import { cn } from "@/shared/lib/utils";
 
 export interface PortalNavbarProps {
@@ -31,6 +44,7 @@ export function PortalNavbar({
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { status, user, roles, permissions, isSuperAdmin } = useAppSession();
 
   const isEn = locale === "en";
 
@@ -86,13 +100,19 @@ export function PortalNavbar({
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  const initials = (user?.name ?? "?").trim().charAt(0).toUpperCase() || "?";
+  const canManageSettings = hasPermission(
+    { roles, permissions, isSuperAdmin },
+    P.settingsManage
+  );
+
   return (
     <header className="adm-head sticky top-0 z-40 w-full border-b border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-md">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
         {/* Brand Block (Matches AdminShell .brand-blk) */}
         <Link
           href="/"
-          className="brand-blk !w-auto max-w-[280px] sm:max-w-md transition hover:opacity-90"
+          className="brand-blk !w-auto max-w-[260px] sm:max-w-md transition hover:opacity-90"
         >
           <i>
             {brandLogo ? (
@@ -137,7 +157,7 @@ export function PortalNavbar({
           })}
         </nav>
 
-        {/* Right Actions (Theme, Lang, Login, Mobile Toggle) */}
+        {/* Right Actions (Theme, Lang, User Avatar Menu / Login, Mobile Toggle) */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Theme Toggle Button */}
           <button
@@ -158,14 +178,103 @@ export function PortalNavbar({
           {/* Language Switcher */}
           <LanguageSwitcher />
 
-          {/* Staff Login Button */}
-          <Link
-            href="/login"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--r-ctl)] text-xs font-semibold border border-[var(--glass-border)] bg-[var(--glass-strong)] hover:bg-[var(--glass-hover)] text-[var(--text)] hover:border-[var(--brand)] transition-colors shadow-xs"
-          >
-            <ShieldCheck className="h-4 w-4 text-[var(--brand)]" />
-            <span>{isEn ? "Staff Login" : "เข้าสู่ระบบ"}</span>
-          </Link>
+          {/* User Avatar Menu (Authenticated) or Staff Login Button (Guest) */}
+          {status === "loading" ? (
+            <div
+              aria-hidden="true"
+              className="h-8 w-8 rounded-full bg-[var(--glass-strong)] animate-pulse"
+            />
+          ) : user ? (
+            <div className="acct">
+              <DropdownMenuPrimitive.Root>
+                <DropdownMenuPrimitive.Trigger asChild>
+                  <button type="button" aria-label={user.name ?? "User menu"}>
+                    <span className="who" aria-hidden="true">
+                      {user.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={user.image}
+                          alt=""
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </span>
+                    <span className="nm hidden sm:inline-block max-w-[120px] truncate">
+                      {user.name}
+                    </span>
+                    <svg className="chev" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                </DropdownMenuPrimitive.Trigger>
+                <DropdownMenuPrimitive.Portal>
+                  <DropdownMenuPrimitive.Content
+                    className="menu-list"
+                    align="end"
+                    sideOffset={8}
+                    style={{ position: "static" }}
+                  >
+                    <DropdownMenuPrimitive.Label asChild>
+                      <div className="px-2.5 py-2">
+                        <p className="text-sm font-medium">{user.name}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuPrimitive.Label>
+                    <DropdownMenuPrimitive.Separator asChild>
+                      <hr />
+                    </DropdownMenuPrimitive.Separator>
+                    <DropdownMenuPrimitive.Item asChild>
+                      <Link href="/dashboard" className="flex items-center gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>{isEn ? "Admin Console" : "ระบบจัดการข้อมูล"}</span>
+                      </Link>
+                    </DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item asChild>
+                      <Link href="/me" className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4" />
+                        <span>{isEn ? "Profile" : "โปรไฟล์ของฉัน"}</span>
+                      </Link>
+                    </DropdownMenuPrimitive.Item>
+                    {canManageSettings && (
+                      <DropdownMenuPrimitive.Item asChild>
+                        <Link href="/settings" className="flex items-center gap-2">
+                          <SettingsIcon className="h-4 w-4" />
+                          <span>{isEn ? "Settings" : "ตั้งค่าระบบ"}</span>
+                        </Link>
+                      </DropdownMenuPrimitive.Item>
+                    )}
+                    <DropdownMenuPrimitive.Separator asChild>
+                      <hr />
+                    </DropdownMenuPrimitive.Separator>
+                    <DropdownMenuPrimitive.Item
+                      asChild
+                      onSelect={() => signOut({ callbackUrl: "/" })}
+                    >
+                      <button
+                        type="button"
+                        className="danger flex items-center gap-2 w-full text-left"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>{isEn ? "Sign Out" : "ออกจากระบบ"}</span>
+                      </button>
+                    </DropdownMenuPrimitive.Item>
+                  </DropdownMenuPrimitive.Content>
+                </DropdownMenuPrimitive.Portal>
+              </DropdownMenuPrimitive.Root>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--r-ctl)] text-xs font-semibold border border-[var(--glass-border)] bg-[var(--glass-strong)] hover:bg-[var(--glass-hover)] text-[var(--text)] hover:border-[var(--brand)] transition-colors shadow-xs"
+            >
+              <ShieldCheck className="h-4 w-4 text-[var(--brand)]" />
+              <span>{isEn ? "Staff Login" : "เข้าสู่ระบบ"}</span>
+            </Link>
+          )}
 
           {/* Mobile Hamburger Button */}
           <button
@@ -208,14 +317,55 @@ export function PortalNavbar({
           })}
 
           <div className="pt-3 mt-2 border-t border-[var(--glass-border)]">
-            <Link
-              href="/login"
-              onClick={closeMobileMenu}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[var(--r-md)] text-xs font-semibold border border-[var(--glass-border)] bg-[var(--glass-strong)] text-[var(--text)] hover:border-[var(--brand)]"
-            >
-              <ShieldCheck className="h-4 w-4 text-[var(--brand)]" />
-              <span>{isEn ? "Staff Login" : "เข้าสู่ระบบบุคลากร"}</span>
-            </Link>
+            {user ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 px-3 py-2 rounded-[var(--r-md)] bg-[var(--glass-strong)]">
+                  <span className="who h-8 w-8 rounded-full bg-[var(--brand)] text-[var(--on-brand)] flex items-center justify-center font-bold text-xs">
+                    {initials}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{user.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-2 px-3 py-2 rounded-[var(--r-md)] text-sm text-[var(--text-2)] hover:text-[var(--text)] hover:bg-[var(--glass-hover)]"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span>{isEn ? "Admin Console" : "ระบบจัดการข้อมูล"}</span>
+                </Link>
+                <Link
+                  href="/me"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-2 px-3 py-2 rounded-[var(--r-md)] text-sm text-[var(--text-2)] hover:text-[var(--text)] hover:bg-[var(--glass-hover)]"
+                >
+                  <UserIcon className="h-4 w-4" />
+                  <span>{isEn ? "Profile" : "โปรไฟล์ของฉัน"}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMobileMenu();
+                    signOut({ callbackUrl: "/" });
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[var(--r-md)] text-sm text-destructive hover:bg-destructive/10 text-left font-medium"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{isEn ? "Sign Out" : "ออกจากระบบ"}</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={closeMobileMenu}
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[var(--r-md)] text-xs font-semibold border border-[var(--glass-border)] bg-[var(--glass-strong)] text-[var(--text)] hover:border-[var(--brand)]"
+              >
+                <ShieldCheck className="h-4 w-4 text-[var(--brand)]" />
+                <span>{isEn ? "Staff Login" : "เข้าสู่ระบบบุคลากร"}</span>
+              </Link>
+            )}
           </div>
         </div>
       )}
