@@ -2,14 +2,13 @@ import Link from "next/link";
 import { getLocale } from "@/shared/lib/i18n/server";
 import { formatDate } from "@/shared/lib/format";
 import { getPortalNews } from "@/features/news/server";
-import { Button } from "@/components/ui/button";
+import { PortalHero } from "./_components/portal-hero";
 import {
   Newspaper,
   Pin,
   ArrowRight,
   Eye,
   Calendar,
-  Sparkles,
   BookOpen,
   Users,
   Building,
@@ -40,41 +39,8 @@ export default async function PortalHomePage() {
 
   return (
     <div className="space-y-16 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary/10 via-background to-background py-20 px-4 sm:px-8 border-b border-border/40">
-        <div className="container mx-auto max-w-7xl">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{isEn ? "Faculty Web Platform" : "แพลตฟอร์มสารสนเทศคณะ"}</span>
-            </div>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground">
-              {isEn
-                ? "Connecting Education, Research & Innovation"
-                : "เชื่อมต่อการศึกษา วิจัย และนวัตกรรมเพื่ออนาคต"}
-            </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {isEn
-                ? "Welcome to the Faculty of Technology and Management portal. Discover our latest academic programs, news announcements, faculty directory, and digital services."
-                : "ยินดีต้อนรับสู่ศูนย์กลางข้อมูลและบริการออนไลน์ คณะเทคโนโลยีและการจัดการ ติดตามข่าวสาร ทุนการศึกษา กิจกรรม และเข้าถึงบริการสำหรับบุคลากรและนักศึกษา"}
-            </p>
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <Link href="/news">
-                <Button size="lg" className="gap-2">
-                  <Newspaper className="h-4 w-4" />
-                  <span>{isEn ? "Explore News" : "อ่านข่าวประชาสัมพันธ์"}</span>
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <span>{isEn ? "Internal Portal" : "สำหรับบุคลากรภายใน"}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Animated Hero Section with Mascot */}
+      <PortalHero locale={locale} />
 
       {/* Feature Highlights Grid */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-8">

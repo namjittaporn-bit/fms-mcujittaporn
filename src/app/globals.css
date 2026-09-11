@@ -69,3 +69,48 @@
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }
 }
+
+@keyframes hero-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.2deg);
+  }
+}
+
+@keyframes hero-pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes hero-badge-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-hero-float {
+  animation: hero-float 5s ease-in-out infinite;
+}
+
+.animate-hero-glow {
+  animation: hero-pulse-glow 4s ease-in-out infinite;
+}
+
+.animate-hero-badge {
+  animation: hero-badge-float 4s ease-in-out infinite;
+}
+
+.animate-hero-badge-delayed {
+  animation: hero-badge-float 4s ease-in-out infinite 2s;
+}
