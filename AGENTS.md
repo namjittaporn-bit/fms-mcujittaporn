@@ -54,9 +54,31 @@ Follow these architectural guidelines when building new features or modifying co
 - Auth routes live in `src/app/(auth)/`.
 - DO NOT manually edit files in `src/shared/styles/liyon/` as they are synced from the upstream theme.
 
-## 6. Verification & Quality Gates
+## 6. Component Modularity & Clean UI
+- Keep Client Components concise and maintainable (< 400 lines).
+- Avoid monolithic components: Decouple large pages into focused subcomponents placed under `_components/` (e.g., `<feature>-stats-bar.tsx`, `<feature>-grid.tsx`, `<feature>-detail-dialog.tsx`, `<feature>-booking-dialog.tsx`).
+- Modals and forms must be extracted into dedicated dialog components with clean prop contracts (`open`, `onOpenChange`, `onSuccess`).
+- Liyon Dialog convention: `LiyonDialogCloseButton` must be a sibling of `LiyonDialogHeader`, not placed inside it.
+- In JSX text, always use `&ldquo;` and `&rdquo;` or string literals for quotes to avoid ESLint unescaped-entity warnings.
+
+## 7. Public Portal & Edge Proxy Routing
+- Edge proxy routing is governed by `src/proxy.ts`.
+- Public portal routes (`/`, `/news`, `/personnel`, `/curriculum`) must be maintained in `PUBLIC_PREFIXES` or `PUBLIC_EXACT` in `src/proxy.ts` so anonymous visitors can view them without forced redirect to `/login`.
+- All dynamic portal routes (`[slug]`, `[id]`) must have:
+  - `loading.tsx`: Skeleton loader matching the page layout.
+  - `not-found.tsx`: Graceful bilingual (TH/EN) 404 page for missing entities.
+- Keep the global root fallback `src/app/not-found.tsx` active.
+
+## 8. Domain Unit Testing & Zero-Warnings Policy
+- Maintain strict **Zero-Warnings Policy** (`npm run lint` must pass with 0 errors and 0 warnings). Remove all unused imports and variables.
+- Every business domain must have unit tests covering Zod schemas and edge cases in `src/features/<feature>/_internal/*.test.ts`:
+  - Interval / schedule conflict detection (reservation overlaps, edge touching, enclosing periods).
+  - Validation schemas (required fields, enum bounds, URL formats, budget numeric constraints).
+- Test execution: `npm run test` must pass 100%.
+
+## 9. Verification & Quality Gates
 Before completing any task:
-1. Run type checks: `npm run type-check`
-2. Run linters & boundary checks: `npm run lint && npm run deps:check`
-3. Run tests: `npm run test`
+1. Run type checks: `npm run type-check` (Must pass with 0 errors)
+2. Run linters & boundary checks: `npm run lint && npm run deps:check` (0 errors, 0 warnings, 0 boundary violations)
+3. Run tests: `npm run test` (100% tests passing)
 4. Full verification suite: `npm run check` (Note: integration tests run against `ums_dev` and truncate tables, so run `npm run db:seed` after running integration tests if testing locally).
