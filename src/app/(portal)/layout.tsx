@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getLocale } from "@/shared/lib/i18n/server";
 import { resolveTenantSettings } from "@/features/identity/server";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { GraduationCap, ShieldCheck, Phone, Mail, MapPin, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PortalNavbar } from "./_components/portal-navbar";
+import { GraduationCap, Phone, Mail, MapPin, ExternalLink } from "lucide-react";
 
 export default async function PortalLayout({
   children,
@@ -18,90 +17,19 @@ export default async function PortalLayout({
   const facultyName = tenant
     ? (isEn ? tenant.nameEn : tenant.nameTh)
     : (isEn ? "Faculty of Technology & Management" : "คณะเทคโนโลยีและการจัดการ");
+  const brandTagline = isEn
+    ? "Excellence in Innovation & Education"
+    : "มุ่งสู่ความเป็นเลิศด้านนวัตกรรมและการศึกษา";
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary/20">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 transition hover:opacity-90">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm overflow-hidden p-1 border border-border/40">
-              {tenant?.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={tenant.logoUrl}
-                  alt={facultyName}
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary text-primary-foreground rounded-lg">
-                  <GraduationCap className="h-5 w-5" />
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-base tracking-tight leading-tight text-foreground">
-                {facultyName}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {isEn ? "Excellence in Innovation & Education" : "มุ่งสู่ความเป็นเลิศด้านนวัตกรรมและการศึกษา"}
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link
-              href="/"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "Home" : "หน้าหลัก"}
-            </Link>
-            <Link
-              href="/news"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "News & Events" : "ข่าวสารและกิจกรรม"}
-            </Link>
-            <Link
-              href="/curriculum"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "Curriculum" : "หลักสูตรการศึกษา"}
-            </Link>
-            <Link
-              href="/personnel"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "Faculty & Staff" : "ทำเนียบบุคลากร"}
-            </Link>
-            <Link
-              href="/news?category=SCHOLARSHIP"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "Scholarships" : "ทุนการศึกษา"}
-            </Link>
-            <Link
-              href="/news?category=PROCUREMENT"
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {isEn ? "Procurement" : "จัดซื้อจัดจ้าง"}
-            </Link>
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Link href="/login">
-              <Button variant="outline" size="sm" className="gap-2 text-xs font-semibold">
-                <ShieldCheck className="h-4 w-4" />
-                <span>{isEn ? "Staff Login" : "เข้าสู่ระบบ"}</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Top Bar (Liyon Admin-style Navbar) */}
+      <PortalNavbar
+        brandName={facultyName}
+        brandTagline={brandTagline}
+        brandLogo={tenant?.logoUrl}
+        locale={locale}
+      />
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>
