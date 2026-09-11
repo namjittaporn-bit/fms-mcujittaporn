@@ -144,4 +144,17 @@ describe("AdminShell", () => {
     );
     expect(screen.getByText("3")).toBeTruthy();
   });
+
+  it("แสดง brandLogo เป็นรูปภาพ img เมื่อระบุ brandLogo และแสดง svg เมื่อไม่ระบุ", () => {
+    const { container: withSvg } = render(<AdminShell {...baseProps({ brandLogo: null })} />);
+    const brandBlkSvg = withSvg.querySelector(".brand-blk i svg");
+    expect(brandBlkSvg).toBeTruthy();
+
+    const { container: withImg } = render(
+      <AdminShell {...baseProps({ brandLogo: "/uploads/logos/test.png" })} />
+    );
+    const img = withImg.querySelector(".brand-blk i img");
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute("src")).toBe("/uploads/logos/test.png");
+  });
 });

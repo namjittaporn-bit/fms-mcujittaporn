@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getLocale } from "@/shared/lib/i18n/server";
+import { resolveTenantSettings } from "@/features/identity/server";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { GraduationCap, ShieldCheck, Phone, Mail, MapPin, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,14 @@ export default async function PortalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
+  const [locale, tenant] = await Promise.all([
+    getLocale(),
+    resolveTenantSettings(),
+  ]);
   const isEn = locale === "en";
+  const facultyName = tenant
+    ? (isEn ? tenant.nameEn : tenant.nameTh)
+    : (isEn ? "Faculty of Technology & Management" : "คณะเทคโนโลยีและการจัดการ");
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary/20">
@@ -19,12 +26,23 @@ export default async function PortalLayout({
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 transition hover:opacity-90">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <GraduationCap className="h-6 w-6" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm overflow-hidden p-1 border border-border/40">
+              {tenant?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={tenant.logoUrl}
+                  alt={facultyName}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary text-primary-foreground rounded-lg">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+              )}
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight leading-tight text-foreground">
-                {isEn ? "Faculty of Technology & Management" : "คณะเทคโนโลยีและการจัดการ"}
+                {facultyName}
               </span>
               <span className="text-xs text-muted-foreground">
                 {isEn ? "Excellence in Innovation & Education" : "มุ่งสู่ความเป็นเลิศด้านนวัตกรรมและการศึกษา"}
@@ -95,11 +113,22 @@ export default async function PortalLayout({
             {/* Col 1: About */}
             <div className="space-y-3 md:col-span-1">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <GraduationCap className="h-4 w-4" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary overflow-hidden p-0.5 border border-border/40">
+                  {tenant?.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={tenant.logoUrl}
+                      alt={facultyName}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-primary text-primary-foreground rounded-md">
+                      <GraduationCap className="h-4 w-4" />
+                    </div>
+                  )}
                 </div>
                 <span className="font-bold text-foreground">
-                  {isEn ? "FMS Platform" : "คณะเทคโนโลยีและการจัดการ"}
+                  {facultyName}
                 </span>
               </div>
               <p className="text-xs leading-relaxed">
