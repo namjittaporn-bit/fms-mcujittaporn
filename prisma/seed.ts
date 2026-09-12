@@ -20,6 +20,27 @@ async function main() {
     nameTh: "มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย",
     nameEn: "Mahachulalongkornrajavidyalaya University",
   });
+
+  await prisma.tenant.update({
+    where: { id: core.tenantId },
+    data: {
+      settings: {
+        palette: "blue",
+        contact: {
+          addressTh: "79 หมู่ที่ 3 ถนนพหลโยธิน ตำบลลำไทร อำเภอวังน้อย จังหวัดพระนครศรีอยุธยา 13170",
+          addressEn: "79 Moo 3, Phahonyothin Road, Lam Sai, Wang Noi, Phra Nakhon Si Ayutthaya 13170, Thailand",
+          phone: "035-248-000",
+          email: "contact@mcu.ac.th",
+          workingHoursTh: "จันทร์ - ศุกร์: 08:30 - 16:30 น.",
+          workingHoursEn: "Mon - Fri: 8:30 AM - 4:30 PM",
+          websiteUrl: "https://www.mcu.ac.th",
+          facebookUrl: "https://www.facebook.com/mcuvariety",
+          lineId: "@mcuofficial",
+          googleMapUrl: "https://maps.app.goo.gl/Mahachulalongkornrajavidyalaya",
+        },
+      },
+    },
+  });
   const hash = await bcrypt.hash(DEV_PASSWORD, 12);
   const users = [
     { email: "admin@app.local", name: "ผู้ดูแลสูงสุด", roles: ["SUPER_ADMIN"] },

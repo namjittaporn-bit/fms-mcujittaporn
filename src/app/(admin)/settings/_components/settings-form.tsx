@@ -13,6 +13,11 @@ import {
   EyeOff,
   KeyRound,
   CheckCircle2,
+  MapPin,
+  Phone,
+  Clock,
+  Globe,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +59,19 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
     fromEmail: initial.smtp?.fromEmail ?? "",
     port: (initial.smtp?.port === 587 ? 587 : 465) as 465 | 587,
     secure: initial.smtp?.secure ?? true,
+  });
+
+  const [contact, setContact] = useState({
+    addressTh: initial.contact?.addressTh ?? "",
+    addressEn: initial.contact?.addressEn ?? "",
+    phone: initial.contact?.phone ?? "",
+    email: initial.contact?.email ?? "",
+    workingHoursTh: initial.contact?.workingHoursTh ?? "",
+    workingHoursEn: initial.contact?.workingHoursEn ?? "",
+    facebookUrl: initial.contact?.facebookUrl ?? "",
+    lineId: initial.contact?.lineId ?? "",
+    websiteUrl: initial.contact?.websiteUrl ?? "",
+    googleMapUrl: initial.contact?.googleMapUrl ?? "",
   });
 
   const [showPass, setShowPass] = useState(false);
@@ -175,6 +193,18 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
           fromEmail: smtp.fromEmail.trim(),
           port: smtp.port,
           secure: smtp.port === 465,
+        },
+        contact: {
+          addressTh: contact.addressTh.trim(),
+          addressEn: contact.addressEn.trim(),
+          phone: contact.phone.trim(),
+          email: contact.email.trim(),
+          workingHoursTh: contact.workingHoursTh.trim(),
+          workingHoursEn: contact.workingHoursEn.trim(),
+          facebookUrl: contact.facebookUrl.trim(),
+          lineId: contact.lineId.trim(),
+          websiteUrl: contact.websiteUrl.trim(),
+          googleMapUrl: contact.googleMapUrl.trim(),
         },
       };
       const r = await updateSettingsAction(payload);
@@ -591,6 +621,177 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
                   )}
                 </Button>
               </div>
+            </div>
+          </div>
+        </LiyonCard>
+
+        {/* Contact Information Card (Public Portal) */}
+        <LiyonCard className="p-6 space-y-6">
+          <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-bold text-foreground">
+                  {t("settings.contactTitle")}
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.contactDesc")}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Address Thai & English */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <LiyonField label={t("settings.contactAddressTh")} htmlFor="c-addr-th">
+                <textarea
+                  id="c-addr-th"
+                  rows={3}
+                  value={contact.addressTh}
+                  onChange={(e) => setContact({ ...contact, addressTh: e.target.value })}
+                  placeholder={t("settings.contactAddressThPh")}
+                  disabled={pending}
+                  className="w-full text-xs p-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactAddressEn")} htmlFor="c-addr-en">
+                <textarea
+                  id="c-addr-en"
+                  rows={3}
+                  value={contact.addressEn}
+                  onChange={(e) => setContact({ ...contact, addressEn: e.target.value })}
+                  placeholder={t("settings.contactAddressEnPh")}
+                  disabled={pending}
+                  className="w-full text-xs p-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </LiyonField>
+            </div>
+
+            {/* Direct Contact: Phone & Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <LiyonField label={t("settings.contactPhone")} htmlFor="c-phone">
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-phone"
+                    type="text"
+                    value={contact.phone}
+                    onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                    placeholder={t("settings.contactPhonePh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactEmail")} htmlFor="c-email">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-email"
+                    type="email"
+                    value={contact.email}
+                    onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                    placeholder={t("settings.contactEmailPh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+            </div>
+
+            {/* Operating Hours: Thai & English */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <LiyonField label={t("settings.contactWorkingHoursTh")} htmlFor="c-hours-th">
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-hours-th"
+                    type="text"
+                    value={contact.workingHoursTh}
+                    onChange={(e) => setContact({ ...contact, workingHoursTh: e.target.value })}
+                    placeholder={t("settings.contactWorkingHoursThPh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactWorkingHoursEn")} htmlFor="c-hours-en">
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-hours-en"
+                    type="text"
+                    value={contact.workingHoursEn}
+                    onChange={(e) => setContact({ ...contact, workingHoursEn: e.target.value })}
+                    placeholder={t("settings.contactWorkingHoursEnPh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+            </div>
+
+            {/* Online Links: Website, Facebook, Line, Google Maps */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <LiyonField label={t("settings.contactWebsite")} htmlFor="c-website">
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-website"
+                    type="url"
+                    value={contact.websiteUrl}
+                    onChange={(e) => setContact({ ...contact, websiteUrl: e.target.value })}
+                    placeholder={t("settings.contactWebsitePh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactFacebook")} htmlFor="c-fb">
+                <div className="relative">
+                  <Share2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-fb"
+                    type="url"
+                    value={contact.facebookUrl}
+                    onChange={(e) => setContact({ ...contact, facebookUrl: e.target.value })}
+                    placeholder={t("settings.contactFacebookPh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactLine")} htmlFor="c-line">
+                <input
+                  id="c-line"
+                  type="text"
+                  value={contact.lineId}
+                  onChange={(e) => setContact({ ...contact, lineId: e.target.value })}
+                  placeholder={t("settings.contactLinePh")}
+                  disabled={pending}
+                />
+              </LiyonField>
+
+              <LiyonField label={t("settings.contactGoogleMap")} htmlFor="c-gmap">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    id="c-gmap"
+                    type="url"
+                    value={contact.googleMapUrl}
+                    onChange={(e) => setContact({ ...contact, googleMapUrl: e.target.value })}
+                    placeholder={t("settings.contactGoogleMapPh")}
+                    disabled={pending}
+                    className="pl-9"
+                  />
+                </div>
+              </LiyonField>
             </div>
           </div>
         </LiyonCard>

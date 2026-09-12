@@ -16,6 +16,19 @@ export const testSmtpInputSchema = z.object({
   smtp: smtpSettingsSchema,
 });
 
+export const contactSettingsSchema = z.object({
+  addressTh: z.string().trim().max(500).optional().default(""),
+  addressEn: z.string().trim().max(500).optional().default(""),
+  phone: z.string().trim().max(100).optional().default(""),
+  email: z.string().trim().email().or(z.literal("")).optional().default(""),
+  workingHoursTh: z.string().trim().max(100).optional().default(""),
+  workingHoursEn: z.string().trim().max(100).optional().default(""),
+  facebookUrl: z.string().trim().url().or(z.literal("")).optional().default(""),
+  lineId: z.string().trim().max(100).optional().default(""),
+  websiteUrl: z.string().trim().url().or(z.literal("")).optional().default(""),
+  googleMapUrl: z.string().trim().url().or(z.literal("")).optional().default(""),
+});
+
 export const updateSettingsSchema = z.object({
   nameTh: z.string().trim().min(1).max(255),
   nameEn: z.string().trim().min(1).max(255),
@@ -28,9 +41,11 @@ export const updateSettingsSchema = z.object({
     .default(""),
   palette: z.enum(PALETTE_IDS),
   smtp: smtpSettingsSchema.optional().nullable(),
+  contact: contactSettingsSchema.optional().nullable(),
 });
 export const updateProfileSchema = z.object({ name: z.string().trim().min(1).max(255), locale: z.enum(["th", "en"]) });
 export type SmtpSettings = z.infer<typeof smtpSettingsSchema>;
+export type ContactSettings = z.infer<typeof contactSettingsSchema>;
 export type TestSmtpInput = z.infer<typeof testSmtpInputSchema>;
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

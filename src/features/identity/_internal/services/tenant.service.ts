@@ -3,7 +3,7 @@ import { prisma, type Db } from "@/shared/lib/infra/prisma";
 import { DEFAULT_PALETTE, isPalette, type PaletteId } from "@/shared/lib/palette";
 import { errors } from "@/shared/lib/errors";
 import { writeAudit } from "../audit";
-import type { UpdateSettingsInput, SmtpSettings } from "../validations/settings";
+import type { UpdateSettingsInput, SmtpSettings, ContactSettings } from "../validations/settings";
 
 export interface TenantSettings {
   code: string;
@@ -12,12 +12,13 @@ export interface TenantSettings {
   logoUrl: string | null;
   palette: PaletteId;
   smtp?: SmtpSettings | null;
+  contact?: ContactSettings | null;
 }
 
 async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSettings> {
   const t = await db.tenant.findUnique({ where: { id: tenantId } });
   if (!t) throw errors.not_found();
-  const settings = (t.settings as { palette?: unknown; smtp?: SmtpSettings } | null) ?? {};
+  const settings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings } | null) ?? {};
   const p = settings.palette;
   const rawSmtp = settings.smtp;
   let smtp: SmtpSettings | null = null;
@@ -32,6 +33,24 @@ async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSetti
       secure: rawSmtp.secure !== undefined ? Boolean(rawSmtp.secure) : rawSmtp.port !== 587,
     };
   }
+
+  const rawContact = settings.contact;
+  let contact: ContactSettings | null = null;
+  if (rawContact && typeof rawContact === "object") {
+    contact = {
+      addressTh: typeof rawContact.addressTh === "string" ? rawContact.addressTh : "",
+      addressEn: typeof rawContact.addressEn === "string" ? rawContact.addressEn : "",
+      phone: typeof rawContact.phone === "string" ? rawContact.phone : "",
+      email: typeof rawContact.email === "string" ? rawContact.email : "",
+      workingHoursTh: typeof rawContact.workingHoursTh === "string" ? rawContact.workingHoursTh : "",
+      workingHoursEn: typeof rawContact.workingHoursEn === "string" ? rawContact.workingHoursEn : "",
+      facebookUrl: typeof rawContact.facebookUrl === "string" ? rawContact.facebookUrl : "",
+      lineId: typeof rawContact.lineId === "string" ? rawContact.lineId : "",
+      websiteUrl: typeof rawContact.websiteUrl === "string" ? rawContact.websiteUrl : "",
+      googleMapUrl: typeof rawContact.googleMapUrl === "string" ? rawContact.googleMapUrl : "",
+    };
+  }
+
   return {
     code: t.code,
     nameTh: t.nameTh,
@@ -39,6 +58,7 @@ async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSetti
     logoUrl: t.logoUrl,
     palette: isPalette(p) ? p : DEFAULT_PALETTE,
     smtp,
+    contact,
   };
 }
 
@@ -46,14 +66,14 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
   return readTenantSettings(tenantId, prisma);
 }
 
-/** เก็บคีย์อื่น ๆ ใน settings JSON ไว้ทั้งหมด — merge palette และ smtp ไม่ทับทั้งก้อน */
+/** เก็บคีย์อื่น ๆ ใน settings JSON ไว้ทั้งหมด — merge palette, smtp และ contact ไม่ทับทั้งก้อน */
 export async function updateTenantSettings(input: { tenantId: string; actorId: string } & UpdateSettingsInput): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // อ่านผ่าน tx เดียวกัน ไม่ใช่ client กลาง — ไม่งั้นทรานแซกชันนี้กินคอนเนกชันจากพูลเพิ่มอีกเส้นเพื่ออ่าน
     // ค่าเดิม และค่าที่อ่านได้ก็อยู่นอกสแนปช็อตของทรานแซกชัน (ค่า before ของ audit อาจไม่ตรงกับที่กำลังจะทับ)
     const before = await readTenantSettings(input.tenantId, tx);
     const t = await tx.tenant.findUniqueOrThrow({ where: { id: input.tenantId }, select: { settings: true } });
-    const existingSettings = (t.settings as { palette?: unknown; smtp?: SmtpSettings } | null) ?? {};
+    const existingSettings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings } | null) ?? {};
 
     let mergedSmtp: SmtpSettings | null = null;
     if (input.smtp) {
@@ -63,6 +83,8 @@ export async function updateTenantSettings(input: { tenantId: string; actorId: s
         pass: input.smtp.pass && input.smtp.pass.trim() !== "" ? input.smtp.pass.trim() : existingPass,
       };
     }
+
+    const mergedContact = input.contact !== undefined ? input.contact : (existingSettings.contact ?? null);
 
     await tx.tenant.update({
       where: { id: input.tenantId },
@@ -74,6 +96,7 @@ export async function updateTenantSettings(input: { tenantId: string; actorId: s
           ...existingSettings,
           palette: input.palette,
           smtp: mergedSmtp,
+          contact: mergedContact,
         },
       },
     });

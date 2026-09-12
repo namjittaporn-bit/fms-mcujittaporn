@@ -39,6 +39,7 @@ export default async function PortalLayout({
         brandTagline={brandTagline}
         brandLogo={tenant?.logoUrl}
         locale={locale}
+        contact={tenant?.contact}
       />
     </div>
   );

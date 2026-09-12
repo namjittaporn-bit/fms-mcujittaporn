@@ -11,13 +11,16 @@ import {
   Users,
   Award,
   FileText,
+  Globe,
 } from "lucide-react";
+import type { ContactSettings } from "@/features/identity";
 
 export interface PortalFooterProps {
   brandName: string;
   brandTagline: string;
   brandLogo?: string | null;
   locale: "th" | "en";
+  contact?: ContactSettings | null;
 }
 
 export function PortalFooter({
@@ -25,6 +28,7 @@ export function PortalFooter({
   brandTagline,
   brandLogo,
   locale,
+  contact,
 }: PortalFooterProps) {
   const isEn = locale === "en";
   const currentYear = new Date().getFullYear();
@@ -195,27 +199,86 @@ export function PortalFooter({
             <ul className="space-y-2.5 text-xs">
               <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 shrink-0 text-[var(--brand)] mt-0.5" />
-                <span className="leading-snug">
-                  {isEn
-                    ? "Faculty of Technology and Management Building, University Main Campus"
-                    : "อาคารคณะเทคโนโลยีและการจัดการ มหาวิทยาลัย"}
-                </span>
+                {contact?.googleMapUrl ? (
+                  <a
+                    href={contact.googleMapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="leading-snug hover:text-[var(--text)] hover:underline transition-colors"
+                  >
+                    {isEn
+                      ? contact.addressEn || contact.addressTh || "Faculty of Technology and Management Building, University Main Campus"
+                      : contact.addressTh || contact.addressEn || "อาคารคณะเทคโนโลยีและการจัดการ มหาวิทยาลัย"}
+                  </a>
+                ) : (
+                  <span className="leading-snug">
+                    {isEn
+                      ? contact?.addressEn || contact?.addressTh || "Faculty of Technology and Management Building, University Main Campus"
+                      : contact?.addressTh || contact?.addressEn || "อาคารคณะเทคโนโลยีและการจัดการ มหาวิทยาลัย"}
+                  </span>
+                )}
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-[var(--brand)]" />
-                <span>02-123-4567</span>
+                <a
+                  href={`tel:${(contact?.phone || "02-123-4567").replace(/\s+/g, "")}`}
+                  className="hover:text-[var(--text)] hover:underline transition-colors"
+                >
+                  {contact?.phone || "02-123-4567"}
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[var(--brand)]" />
-                <span>info@faculty.ac.th</span>
+                <a
+                  href={`mailto:${contact?.email || "info@faculty.ac.th"}`}
+                  className="hover:text-[var(--text)] hover:underline transition-colors"
+                >
+                  {contact?.email || "info@faculty.ac.th"}
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Clock className="h-4 w-4 shrink-0 text-[var(--brand)]" />
                 <span>
-                  {isEn ? "Mon - Fri: 8:30 - 16:30" : "จันทร์ - ศุกร์: 08:30 - 16:30 น."}
+                  {isEn
+                    ? contact?.workingHoursEn || contact?.workingHoursTh || "Mon - Fri: 8:30 - 16:30"
+                    : contact?.workingHoursTh || contact?.workingHoursEn || "จันทร์ - ศุกร์: 08:30 - 16:30 น."}
                 </span>
               </li>
             </ul>
+
+            {/* Social / External Links */}
+            {(contact?.facebookUrl || contact?.websiteUrl || contact?.lineId) && (
+              <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
+                {contact.websiteUrl && (
+                  <a
+                    href={contact.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--text-muted)] hover:text-[var(--brand)] transition-colors"
+                    title={isEn ? "Official Website" : "เว็บไซต์หลัก"}
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                    <span>{isEn ? "Website" : "เว็บไซต์"}</span>
+                  </a>
+                )}
+                {contact.facebookUrl && (
+                  <a
+                    href={contact.facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--text-muted)] hover:text-[var(--brand)] transition-colors"
+                    title="Facebook Page"
+                  >
+                    <span>Facebook</span>
+                  </a>
+                )}
+                {contact.lineId && (
+                  <span className="inline-flex items-center gap-1 text-[var(--text-muted)]">
+                    <span>Line: {contact.lineId}</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

@@ -114,4 +114,70 @@ describe("updateSettingsSchema", () => {
     });
     expect(res.success).toBe(false);
   });
+
+  it("ยอมรับข้อมูลการติดต่อที่ถูกต้อง", () => {
+    const res = updateSettingsSchema.safeParse({
+      ...baseValid,
+      contact: {
+        addressTh: "79 หมู่ 3 วังน้อย พระนครศรีอยุธยา",
+        addressEn: "79 Moo 3 Wang Noi Ayutthaya",
+        phone: "035-248-000",
+        email: "info@mcu.ac.th",
+        workingHoursTh: "จันทร์ - ศุกร์: 08:30 - 16:30 น.",
+        workingHoursEn: "Mon - Fri: 8:30 - 16:30",
+        facebookUrl: "https://facebook.com/mcu.official",
+        lineId: "@mcu",
+        websiteUrl: "https://www.mcu.ac.th",
+        googleMapUrl: "https://maps.google.com/?cid=12345",
+      },
+    });
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.contact?.email).toBe("info@mcu.ac.th");
+      expect(res.data.contact?.phone).toBe("035-248-000");
+    }
+  });
+
+  it("ยอมรับ contact เป็น null หรือสตริงว่าง", () => {
+    const resNull = updateSettingsSchema.safeParse({
+      ...baseValid,
+      contact: null,
+    });
+    expect(resNull.success).toBe(true);
+
+    const resEmpty = updateSettingsSchema.safeParse({
+      ...baseValid,
+      contact: {
+        addressTh: "",
+        addressEn: "",
+        phone: "",
+        email: "",
+        workingHoursTh: "",
+        workingHoursEn: "",
+        facebookUrl: "",
+        lineId: "",
+        websiteUrl: "",
+        googleMapUrl: "",
+      },
+    });
+    expect(resEmpty.success).toBe(true);
+  });
+
+  it("ปฏิเสธอีเมลติดต่อหรือ URL ที่ผิดรูปแบบ", () => {
+    const resBadEmail = updateSettingsSchema.safeParse({
+      ...baseValid,
+      contact: {
+        email: "not-an-email",
+      },
+    });
+    expect(resBadEmail.success).toBe(false);
+
+    const resBadUrl = updateSettingsSchema.safeParse({
+      ...baseValid,
+      contact: {
+        facebookUrl: "invalid-url",
+      },
+    });
+    expect(resBadUrl.success).toBe(false);
+  });
 });

@@ -47,4 +47,31 @@ describe("PortalFooter", () => {
     expect(screen.getByRole("link", { name: /Faculty & Staff/ })).toBeTruthy();
     expect(screen.getAllByRole("link", { name: /Admin Console/ }).length).toBeGreaterThan(0);
   });
+
+  it("renders custom contact details and external links when provided", () => {
+    render(
+      <PortalFooter
+        {...baseProps({
+          locale: "th",
+          contact: {
+            addressTh: "79 ม.3 วังน้อย อยุธยา",
+            addressEn: "79 Moo 3 Wang Noi",
+            phone: "035-248-000",
+            email: "contact@mcu.ac.th",
+            workingHoursTh: "จันทร์ - ศุกร์: 08:30 - 16:30 น.",
+            workingHoursEn: "Mon - Fri: 8:30 - 16:30",
+            facebookUrl: "https://facebook.com/mcu",
+            lineId: "@mcuofficial",
+            websiteUrl: "https://www.mcu.ac.th",
+            googleMapUrl: "https://maps.google.com/?cid=123",
+          },
+        })}
+      />
+    );
+    expect(screen.getByText("79 ม.3 วังน้อย อยุธยา")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "035-248-000" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "contact@mcu.ac.th" })).toBeTruthy();
+    expect(screen.getByText("Line: @mcuofficial")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /เว็บไซต์/ })).toBeTruthy();
+  });
 });
