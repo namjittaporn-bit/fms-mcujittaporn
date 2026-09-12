@@ -17,8 +17,8 @@ async function main() {
   }
   const core = await seedCore(prisma, {
     tenantCode: "DEMO",
-    nameTh: "มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย",
-    nameEn: "Mahachulalongkornrajavidyalaya University",
+    nameTh: "มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย วิทยาเขตอุบลราชธานี",
+    nameEn: "Mahachulalongkornrajavidyalaya University, Ubon Ratchathani Campus",
   });
 
   await prisma.tenant.update({
@@ -27,16 +27,16 @@ async function main() {
       settings: {
         palette: "blue",
         contact: {
-          addressTh: "79 หมู่ที่ 3 ถนนพหลโยธิน ตำบลลำไทร อำเภอวังน้อย จังหวัดพระนครศรีอยุธยา 13170",
-          addressEn: "79 Moo 3, Phahonyothin Road, Lam Sai, Wang Noi, Phra Nakhon Si Ayutthaya 13170, Thailand",
-          phone: "035-248-000",
-          email: "contact@mcu.ac.th",
+          addressTh: "ส่วนงาน มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย วิทยาเขตอุบลราชธานี หมู่ที่ ๑ ตำบลกระโสบ อำเภอเมืองอุบลราชธานี จังหวัดอุบลราชธานี ๓๔๐๐๐",
+          addressEn: "Mahachulalongkornrajavidyalaya University, Ubon Ratchathani Campus, Moo 1, Krasop, Mueang Ubon Ratchathani, Ubon Ratchathani 34000, Thailand",
+          phone: "045-316-724",
+          email: "ubon@mcu.ac.th",
           workingHoursTh: "จันทร์ - ศุกร์: 08:30 - 16:30 น.",
           workingHoursEn: "Mon - Fri: 8:30 AM - 4:30 PM",
-          websiteUrl: "https://www.mcu.ac.th",
-          facebookUrl: "https://www.facebook.com/mcuvariety",
-          lineId: "@mcuofficial",
-          googleMapUrl: "https://maps.app.goo.gl/Mahachulalongkornrajavidyalaya",
+          websiteUrl: "https://ubon.mcu.ac.th",
+          facebookUrl: "https://www.facebook.com/mcu.ubon",
+          lineId: "@mcu.ubon",
+          googleMapUrl: "https://maps.google.com/?q=มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย+วิทยาเขตอุบลราชธานี",
         },
       },
     },
@@ -55,6 +55,7 @@ async function main() {
 
   // Seed sample departments
   const depts = [
+    { code: "BS", nameTh: "ภาควิชาพระพุทธศาสนา", nameEn: "Department of Buddhist Studies" },
     { code: "CS", nameTh: "ภาควิชาวิทยาการคอมพิวเตอร์", nameEn: "Department of Computer Science" },
     { code: "IT", nameTh: "ภาควิชาเทคโนโลยีสารสนเทศ", nameEn: "Department of Information Technology" },
     { code: "IM", nameTh: "ภาควิชาการจัดการนวัตกรรม", nameEn: "Department of Innovation Management" },
@@ -299,6 +300,39 @@ async function main() {
 
   // Seed sample curriculum programs
   const samplePrograms = [
+    {
+      code: "BS-BA-2570",
+      nameTh: "หลักสูตรพุทธศาสตรบัณฑิต สาขาวิชาพระพุทธศาสนา (๔ ปี) (หลักสูตรปรับปรุง พ.ศ. ๒๕๗๐)",
+      nameEn: "Bachelor of Arts Program in Buddhist Studies (4-Year Program, Revised Curriculum B.E. 2570)",
+      degreeTitleTh: "พุทธศาสตรบัณฑิต (พระพุทธศาสนา)",
+      degreeTitleEn: "Bachelor of Arts (Buddhist Studies)",
+      degreeAbbrTh: "พธ.บ. (พระพุทธศาสนา)",
+      degreeAbbrEn: "B.A. (Buddhist Studies)",
+      degreeLevel: "BACHELOR" as const,
+      programPlan: "REGULAR" as const,
+      deptCode: "BS",
+      durationYears: 4,
+      totalCredits: 132,
+      tuitionFeeSemester: 12000,
+      descriptionTh: "หลักสูตรพุทธศาสตรบัณฑิต สาขาวิชาพระพุทธศาสนา มุ่งผลิตบัณฑิตให้มีความรู้ความเข้าใจในพระไตรปิฎก หลักธรรมทางพระพุทธศาสนาอย่างลึกซึ้ง สามารถประยุกต์ใช้ในการดำเนินชีวิต การเผยแผ่พระพุทธศาสนา การพัฒนาสังคมและสันติสุข มีคุณธรรม จริยธรรม และทักษะการเรียนรู้ในศตวรรษที่ ๒๑",
+      descriptionEn: "Bachelor of Arts in Buddhist Studies aims to produce graduates with profound knowledge and understanding of the Tipitaka and Buddhist principles, capable of applying them to daily life, Buddhist propagation, social development, and world peace, endowed with morality and 21st-century learning skills.",
+      careerPaths: [
+        "พระธรรมทูต / นักเผยแผ่พระพุทธศาสนา",
+        "อาจารย์ / ครูสอนวิชาพระพุทธศาสนาและสังคมศึกษา",
+        "นักวิชาการศาสนา / นักวิจัยทางพุทธศาสนา",
+        "เจ้าหน้าที่องค์กรการกุศลและมูลนิธิต่างๆ",
+        "นักพัฒนาชุมชนและสังคม",
+        "บุคลากรทางการศึกษาและวัฒนธรรม",
+      ],
+      curriculumStructure: [
+        { category: "หมวดวิชาศึกษาทั่วไป (General Education)", credits: 30, description: "กลุ่มวิชาภาษาและการสื่อสาร, กลุ่มวิชามนุษยศาสตร์และสังคมศาสตร์, กลุ่มวิชาคณิตศาสตร์และวิทยาศาสตร์" },
+        { category: "หมวดวิชาเฉพาะ (Specialized Courses)", credits: 96, description: "วิชาแกนพระพุทธศาสนา ๓๐ หน่วยกิต, วิชาเฉพาะด้านบังคับ ๕๑ หน่วยกิต, วิชาเฉพาะด้านเลือก ๑๕ หน่วยกิต" },
+        { category: "หมวดวิชาเลือกเสรี (Free Electives)", credits: 6, description: "เลือกเรียนรายวิชาใดๆ ที่เปิดสอนในระดับปริญญาตรีของมหาวิทยาลัย" },
+      ],
+      coverImageUrl: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80",
+      status: "ACTIVE" as const,
+      orderIndex: 0,
+    },
     {
       code: "CS-BS-2565",
       nameTh: "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์",
