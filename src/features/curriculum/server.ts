@@ -6,6 +6,7 @@ import {
   getPublicProgramById,
   listAdminPrograms,
   listDepartments,
+  listAdminDepartments,
   type CurriculumProgramDto,
   type DepartmentDto,
 } from "./_internal/services";
@@ -16,6 +17,7 @@ export {
   getPublicProgramById,
   listAdminPrograms,
   listDepartments,
+  listAdminDepartments,
   CURRICULUM_P,
   CURRICULUM_PERMISSIONS,
   type CurriculumProgramDto,

@@ -9,8 +9,10 @@ import {
   Search,
   AlertCircle,
   BookOpen,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DepartmentManager } from "./department-manager";
 import { useT, useLocale } from "@/shared/lib/i18n/client";
 import {
   LiyonCard,
@@ -61,6 +63,8 @@ export function CurriculumClient({
   const isEn = locale === "en";
 
   const [items, setItems] = useState<CurriculumProgramDto[]>(initialItems);
+  const [deptList, setDeptList] = useState<DepartmentDto[]>(departments);
+  const [activeTab, setActiveTab] = useState<"programs" | "departments">("programs");
   const [isPending, startTransition] = useTransition();
 
   // Filters
@@ -331,8 +335,8 @@ export function CurriculumClient({
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Top Header & Tab Navigation */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t("curriculum.manageTitle")}
@@ -341,16 +345,68 @@ export function CurriculumClient({
             {t("curriculum.subtitle")}
           </p>
         </div>
-        {canCreate && (
-          <Button onClick={handleOpenCreate} size="sm" className="gap-2 text-xs font-semibold">
-            <Plus className="h-4 w-4" />
-            <span>{t("curriculum.action.create")}</span>
-          </Button>
-        )}
+
+        {/* Tab Switcher Pills */}
+        <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl border border-border/50">
+          <button
+            type="button"
+            onClick={() => setActiveTab("programs")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              activeTab === "programs"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <GraduationCap className="h-4 w-4 text-primary" />
+            <span>{t("curriculum.tab.programs")}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/10 text-primary font-bold">
+              {items.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("departments")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              activeTab === "departments"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Building2 className="h-4 w-4 text-primary" />
+            <span>{t("curriculum.tab.departments")}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/10 text-primary font-bold">
+              {deptList.length}
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      {activeTab === "departments" ? (
+        <DepartmentManager
+          departments={deptList}
+          onDepartmentsChange={setDeptList}
+          canCreate={canCreate}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+        />
+      ) : (
+        <>
+          {/* Action Header for Programs */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-foreground">
+              {t("curriculum.tab.programs")}
+            </h2>
+            {canCreate && (
+              <Button onClick={handleOpenCreate} size="sm" className="gap-2 text-xs font-semibold">
+                <Plus className="h-4 w-4" />
+                <span>{t("curriculum.action.create")}</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <LiyonCard className="p-4 space-y-1">
           <div className="flex items-center justify-between text-muted-foreground text-xs">
             <span>{t("curriculum.stats.total")}</span>
@@ -414,7 +470,7 @@ export function CurriculumClient({
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDeptFilter(e.target.value)}
           >
             <option value="ALL">{isEn ? "All Departments" : "ทุกภาควิชา"}</option>
-            {departments.map((d) => (
+            {deptList.map((d) => (
               <option key={d.id} value={d.id}>
                 {isEn ? d.nameEn : d.nameTh}
               </option>
@@ -590,7 +646,7 @@ export function CurriculumClient({
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setDepartmentId(e.target.value)}
                 >
                   <option value="">{isEn ? "None / Faculty Center" : "ไม่ระบุ / ศูนย์กลางคณะ"}</option>
-                  {departments.map((d) => (
+                  {deptList.map((d) => (
                     <option key={d.id} value={d.id}>
                       {isEn ? d.nameEn : d.nameTh}
                     </option>
@@ -756,6 +812,8 @@ export function CurriculumClient({
           </Button>
         </LiyonDialogFooter>
       </LiyonDialog>
+        </>
+      )}
     </div>
   );
 }

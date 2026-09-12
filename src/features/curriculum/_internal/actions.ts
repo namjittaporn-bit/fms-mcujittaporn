@@ -10,14 +10,22 @@ import {
   createProgramSchema,
   updateProgramSchema,
   toggleProgramStatusSchema,
+  createDepartmentSchema,
+  updateDepartmentSchema,
+  toggleDepartmentStatusSchema,
 } from "./validations";
 import {
   listAdminPrograms,
   listDepartments,
+  listAdminDepartments,
   createProgram,
   updateProgram,
   deleteProgram,
   toggleProgramStatus,
+  createDepartment,
+  updateDepartment,
+  toggleDepartmentStatus,
+  deleteDepartment,
   type CurriculumProgramDto,
   type DepartmentDto,
 } from "./services";
@@ -88,5 +96,65 @@ export async function toggleProgramStatusAction(
     revalidatePath("/admin/curriculum");
     revalidatePath("/curriculum");
     return result;
+  });
+}
+
+export async function listAdminDepartmentsAction(): Promise<ActionResult<DepartmentDto[]>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(CURRICULUM_P.curriculumRead);
+    return listAdminDepartments(ctx.tenantId);
+  });
+}
+
+export async function createDepartmentAction(
+  input: unknown
+): Promise<ActionResult<DepartmentDto>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(CURRICULUM_P.curriculumCreate);
+    const locale = await getLocale();
+    const parsed = createDepartmentSchema.parse(input, { error: zodErrorMap(locale) });
+    const result = await createDepartment(ctx.tenantId, parsed);
+    revalidatePath("/admin/curriculum");
+    revalidatePath("/curriculum");
+    return result;
+  });
+}
+
+export async function updateDepartmentAction(
+  input: unknown
+): Promise<ActionResult<DepartmentDto>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(CURRICULUM_P.curriculumUpdate);
+    const locale = await getLocale();
+    const parsed = updateDepartmentSchema.parse(input, { error: zodErrorMap(locale) });
+    const result = await updateDepartment(ctx.tenantId, parsed);
+    revalidatePath("/admin/curriculum");
+    revalidatePath("/curriculum");
+    return result;
+  });
+}
+
+export async function toggleDepartmentStatusAction(
+  input: unknown
+): Promise<ActionResult<DepartmentDto>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(CURRICULUM_P.curriculumUpdate);
+    const locale = await getLocale();
+    const parsed = toggleDepartmentStatusSchema.parse(input, { error: zodErrorMap(locale) });
+    const result = await toggleDepartmentStatus(ctx.tenantId, parsed.id, parsed.isActive);
+    revalidatePath("/admin/curriculum");
+    revalidatePath("/curriculum");
+    return result;
+  });
+}
+
+export async function deleteDepartmentAction(
+  id: string
+): Promise<ActionResult<void>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(CURRICULUM_P.curriculumDelete);
+    await deleteDepartment(ctx.tenantId, id);
+    revalidatePath("/admin/curriculum");
+    revalidatePath("/curriculum");
   });
 }

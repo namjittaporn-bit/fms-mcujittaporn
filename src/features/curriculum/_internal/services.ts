@@ -4,6 +4,8 @@ import type {
   UpdateProgramInput,
   CurriculumCategory,
   StudyPlanSemester,
+  CreateDepartmentInput,
+  UpdateDepartmentInput,
 } from "./validations";
 import type { DegreeLevel, ProgramPlan, ProgramStatus } from "@/generated/prisma";
 
@@ -12,6 +14,13 @@ export interface DepartmentDto {
   code: string;
   nameTh: string;
   nameEn: string;
+  description?: string | null;
+  orderIndex?: number;
+  isActive?: boolean;
+  programCount?: number;
+  staffCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CurriculumProgramDto {
@@ -263,6 +272,179 @@ export async function toggleProgramStatus(
 
 export async function deleteProgram(tenantId: string, id: string): Promise<void> {
   await prisma.curriculumProgram.delete({
+    where: { id, tenantId },
+  });
+}
+
+export async function listAdminDepartments(tenantId: string): Promise<DepartmentDto[]> {
+  const list = await prisma.department.findMany({
+    where: { tenantId },
+    include: {
+      _count: {
+        select: {
+          curriculumPrograms: true,
+          staffProfiles: true,
+        },
+      },
+    },
+    orderBy: { orderIndex: "asc" },
+  });
+  return list.map((d) => ({
+    id: d.id,
+    code: d.code,
+    nameTh: d.nameTh,
+    nameEn: d.nameEn,
+    description: d.description,
+    orderIndex: d.orderIndex,
+    isActive: d.isActive,
+    programCount: d._count.curriculumPrograms,
+    staffCount: d._count.staffProfiles,
+    createdAt: d.createdAt.toISOString(),
+    updatedAt: d.updatedAt.toISOString(),
+  }));
+}
+
+export async function createDepartment(
+  tenantId: string,
+  input: CreateDepartmentInput
+): Promise<DepartmentDto> {
+  const existing = await prisma.department.findUnique({
+    where: { tenantId_code: { tenantId, code: input.code } },
+  });
+  if (existing) {
+    throw new Error("department_code_exists");
+  }
+
+  const created = await prisma.department.create({
+    data: {
+      tenantId,
+      code: input.code,
+      nameTh: input.nameTh,
+      nameEn: input.nameEn,
+      description: input.description || null,
+      orderIndex: input.orderIndex,
+      isActive: input.isActive,
+    },
+    include: {
+      _count: {
+        select: {
+          curriculumPrograms: true,
+          staffProfiles: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: created.id,
+    code: created.code,
+    nameTh: created.nameTh,
+    nameEn: created.nameEn,
+    description: created.description,
+    orderIndex: created.orderIndex,
+    isActive: created.isActive,
+    programCount: created._count.curriculumPrograms,
+    staffCount: created._count.staffProfiles,
+    createdAt: created.createdAt.toISOString(),
+    updatedAt: created.updatedAt.toISOString(),
+  };
+}
+
+export async function updateDepartment(
+  tenantId: string,
+  input: UpdateDepartmentInput
+): Promise<DepartmentDto> {
+  const existingCode = await prisma.department.findFirst({
+    where: {
+      tenantId,
+      code: input.code,
+      NOT: { id: input.id },
+    },
+  });
+  if (existingCode) {
+    throw new Error("department_code_exists");
+  }
+
+  const updated = await prisma.department.update({
+    where: { id: input.id, tenantId },
+    data: {
+      code: input.code,
+      nameTh: input.nameTh,
+      nameEn: input.nameEn,
+      description: input.description || null,
+      orderIndex: input.orderIndex,
+      isActive: input.isActive,
+    },
+    include: {
+      _count: {
+        select: {
+          curriculumPrograms: true,
+          staffProfiles: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: updated.id,
+    code: updated.code,
+    nameTh: updated.nameTh,
+    nameEn: updated.nameEn,
+    description: updated.description,
+    orderIndex: updated.orderIndex,
+    isActive: updated.isActive,
+    programCount: updated._count.curriculumPrograms,
+    staffCount: updated._count.staffProfiles,
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+}
+
+export async function toggleDepartmentStatus(
+  tenantId: string,
+  id: string,
+  isActive: boolean
+): Promise<DepartmentDto> {
+  const updated = await prisma.department.update({
+    where: { id, tenantId },
+    data: { isActive },
+    include: {
+      _count: {
+        select: {
+          curriculumPrograms: true,
+          staffProfiles: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: updated.id,
+    code: updated.code,
+    nameTh: updated.nameTh,
+    nameEn: updated.nameEn,
+    description: updated.description,
+    orderIndex: updated.orderIndex,
+    isActive: updated.isActive,
+    programCount: updated._count.curriculumPrograms,
+    staffCount: updated._count.staffProfiles,
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+}
+
+export async function deleteDepartment(
+  tenantId: string,
+  id: string
+): Promise<void> {
+  const programCount = await prisma.curriculumProgram.count({
+    where: { tenantId, departmentId: id },
+  });
+  if (programCount > 0) {
+    throw new Error("department_has_programs");
+  }
+
+  await prisma.department.delete({
     where: { id, tenantId },
   });
 }

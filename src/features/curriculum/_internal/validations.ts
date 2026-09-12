@@ -72,6 +72,24 @@ export const toggleProgramStatusSchema = z.object({
   status: programStatusEnum,
 });
 
+export const createDepartmentSchema = z.object({
+  code: z.string().trim().min(1, "code_required").max(50),
+  nameTh: z.string().trim().min(1, "nameTh_required").max(255),
+  nameEn: z.string().trim().min(1, "nameEn_required").max(255),
+  description: z.string().trim().optional().nullable(),
+  orderIndex: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const updateDepartmentSchema = createDepartmentSchema.extend({
+  id: z.string().uuid(),
+});
+
+export const toggleDepartmentStatusSchema = z.object({
+  id: z.string().uuid(),
+  isActive: z.boolean(),
+});
+
 export type DegreeLevelType = z.infer<typeof degreeLevelEnum>;
 export type ProgramPlanType = z.infer<typeof programPlanEnum>;
 export type ProgramStatusType = z.infer<typeof programStatusEnum>;
@@ -79,3 +97,5 @@ export type CurriculumCategory = z.infer<typeof curriculumCategorySchema>;
 export type StudyPlanSemester = z.infer<typeof studyPlanSemesterSchema>;
 export type CreateProgramInput = z.infer<typeof createProgramSchema>;
 export type UpdateProgramInput = z.infer<typeof updateProgramSchema>;
+export type CreateDepartmentInput = z.infer<typeof createDepartmentSchema>;
+export type UpdateDepartmentInput = z.infer<typeof updateDepartmentSchema>;

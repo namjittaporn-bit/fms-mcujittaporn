@@ -3,6 +3,9 @@ import {
   createProgramSchema,
   updateProgramSchema,
   toggleProgramStatusSchema,
+  createDepartmentSchema,
+  updateDepartmentSchema,
+  toggleDepartmentStatusSchema,
   degreeLevelEnum,
 } from "./validations";
 
@@ -76,5 +79,42 @@ describe("curriculum validations", () => {
     expect(toggleProgramStatusSchema.parse(revised)).toEqual(revised);
 
     expect(() => toggleProgramStatusSchema.parse({ id: validUUID, status: "DELETED" })).toThrow();
+  });
+
+  describe("department validations", () => {
+    const validDepartment = {
+      code: "CS",
+      nameTh: "ภาควิชาวิทยาการคอมพิวเตอร์",
+      nameEn: "Department of Computer Science",
+      description: "มุ่งเน้นการสอนและการวิจัยด้านวิทยาการคอมพิวเตอร์",
+      orderIndex: 1,
+      isActive: true,
+    };
+
+    it("createDepartmentSchema ผ่านเมื่อข้อมูลภาควิชาถูกต้อง", () => {
+      const result = createDepartmentSchema.parse(validDepartment);
+      expect(result.code).toBe("CS");
+      expect(result.nameTh).toBe("ภาควิชาวิทยาการคอมพิวเตอร์");
+      expect(result.isActive).toBe(true);
+      expect(result.orderIndex).toBe(1);
+    });
+
+    it("createDepartmentSchema ล้มเมื่อไม่มี code หรือ nameTh หรือ nameEn", () => {
+      expect(() => createDepartmentSchema.parse({ ...validDepartment, code: "" })).toThrow();
+      expect(() => createDepartmentSchema.parse({ ...validDepartment, nameTh: "" })).toThrow();
+      expect(() => createDepartmentSchema.parse({ ...validDepartment, nameEn: "" })).toThrow();
+    });
+
+    it("updateDepartmentSchema ต้องการ id แบบ UUID", () => {
+      const validUpdate = { ...validDepartment, id: validUUID };
+      expect(updateDepartmentSchema.parse(validUpdate).id).toBe(validUUID);
+      expect(() => updateDepartmentSchema.parse({ ...validDepartment, id: "bad-id" })).toThrow();
+    });
+
+    it("toggleDepartmentStatusSchema ตรวจสอบ boolean สถานะ", () => {
+      const toggle = { id: validUUID, isActive: false };
+      expect(toggleDepartmentStatusSchema.parse(toggle)).toEqual(toggle);
+      expect(() => toggleDepartmentStatusSchema.parse({ id: validUUID, isActive: "yes" })).toThrow();
+    });
   });
 });
