@@ -10,5 +10,6 @@ export type { UserListItem } from "./_internal/services/user.service";
 export type { RoleItem } from "./_internal/services/role.service";
 export type { RoleAssignment, ListUsersQuery } from "./_internal/validations/users";
 export type { TenantSettings } from "./_internal/services/tenant.service";
-export type { SmtpSettings, ContactSettings } from "./_internal/validations/settings";
-export { contactSettingsSchema } from "./_internal/validations/settings";
+export type { SmtpSettings, ContactSettings, GeminiSettings } from "./_internal/validations/settings";
+export { contactSettingsSchema, geminiSettingsSchema } from "./_internal/validations/settings";
+

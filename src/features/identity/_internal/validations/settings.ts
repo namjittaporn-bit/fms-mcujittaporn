@@ -29,6 +29,16 @@ export const contactSettingsSchema = z.object({
   googleMapUrl: z.string().trim().url().or(z.literal("")).optional().default(""),
 });
 
+export const geminiSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  apiKey: z.string().trim().max(255).optional().default(""),
+  model: z.string().trim().max(100).default("gemini-1.5-flash"),
+});
+
+export const testGeminiInputSchema = z.object({
+  gemini: geminiSettingsSchema,
+});
+
 export const updateSettingsSchema = z.object({
   nameTh: z.string().trim().min(1).max(255),
   nameEn: z.string().trim().min(1).max(255),
@@ -42,10 +52,13 @@ export const updateSettingsSchema = z.object({
   palette: z.enum(PALETTE_IDS),
   smtp: smtpSettingsSchema.optional().nullable(),
   contact: contactSettingsSchema.optional().nullable(),
+  gemini: geminiSettingsSchema.optional().nullable(),
 });
 export const updateProfileSchema = z.object({ name: z.string().trim().min(1).max(255), locale: z.enum(["th", "en"]) });
 export type SmtpSettings = z.infer<typeof smtpSettingsSchema>;
 export type ContactSettings = z.infer<typeof contactSettingsSchema>;
+export type GeminiSettings = z.infer<typeof geminiSettingsSchema>;
 export type TestSmtpInput = z.infer<typeof testSmtpInputSchema>;
+export type TestGeminiInput = z.infer<typeof testGeminiInputSchema>;
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

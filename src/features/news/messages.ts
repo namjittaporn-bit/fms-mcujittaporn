@@ -48,6 +48,10 @@ export const MESSAGES: Dictionary = {
   "news.updateSuccess": { th: "บันทึกการแก้ไขเรียบร้อยแล้ว", en: "News article updated successfully" },
   "news.deleteSuccess": { th: "ลบข่าวสารเรียบร้อยแล้ว", en: "News article deleted successfully" },
   "news.pinSuccess": { th: "อัปเดตการปักหมุดเรียบร้อยแล้ว", en: "Pin status updated successfully" },
+  "news.translateWithAi": { th: "แปลภาษาอังกฤษด้วย Gemini AI", en: "Translate to English with Gemini AI" },
+  "news.translatingWithAi": { th: "กำลังแปลภาษาอังกฤษด้วย AI...", en: "Translating to English with AI..." },
+  "news.translateAiSuccess": { th: "แปลภาษาอังกฤษด้วย Gemini สำเร็จแล้ว สามารถตรวจสอบหรือปรับแต่งได้", en: "Translated to English successfully. You can review and refine the text." },
+  "news.translateAiNeedThai": { th: "กรุณาระบุหัวข้อข่าวหรือเนื้อหาภาษาไทยก่อนดำเนินการแปล", en: "Please enter Thai title or content first before translating." },
 
   // Public Portal UI
   "portal.news.title": { th: "ข่าวสารและกิจกรรม", en: "News & Activities" },

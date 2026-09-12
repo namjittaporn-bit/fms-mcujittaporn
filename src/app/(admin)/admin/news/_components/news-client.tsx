@@ -11,6 +11,8 @@ import {
   Newspaper,
   Search,
   AlertCircle,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT, useLocale } from "@/shared/lib/i18n/client";
@@ -38,6 +40,7 @@ import {
   togglePinNewsAction,
   deleteNewsAction,
   getAdminNewsAction,
+  translateNewsWithGeminiAction,
 } from "@/features/news/actions";
 
 interface Props {
@@ -82,6 +85,7 @@ export function NewsClient({
   const [status, setStatus] = useState<NewsStatusType>("DRAFT");
   const [isPinned, setIsPinned] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const refreshItems = async () => {
     const res = await getAdminNewsAction();
@@ -126,6 +130,45 @@ export function NewsClient({
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "");
       setSlug(gen || `news-${Date.now().toString().slice(-4)}`);
+    }
+  };
+
+  const handleTranslateWithGemini = async () => {
+    if (!titleTh.trim() && !contentTh.trim()) {
+      toast.error(t("news.translateAiNeedThai"));
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const res = await translateNewsWithGeminiAction({
+        titleTh: titleTh.trim() || "ประกาศข่าวสาร",
+        contentTh: contentTh.trim() || "รายละเอียดข่าวสาร",
+      });
+
+      if (res.ok) {
+        if (res.data.titleEn) {
+          setTitleEn(res.data.titleEn);
+          if (!editingItem && (!slug || slug.startsWith("news-") || !/^[a-z0-9-]+$/.test(slug))) {
+            const cleanSlug = res.data.titleEn
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "");
+            if (cleanSlug) setSlug(cleanSlug.slice(0, 60));
+          }
+        }
+        if (res.data.contentEn) {
+          setContentEn(res.data.contentEn);
+        }
+        toast.success(t("news.translateAiSuccess"));
+      } else {
+        toast.error(res.error.message || t("common.error"));
+      }
+    } catch {
+      toast.error(t("common.error"));
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -402,6 +445,48 @@ export function NewsClient({
           description={t("news.subtitle")}
         />
         <LiyonDialogBody className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          {/* AI Translation Action Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-500/5 via-fuchsia-500/5 to-transparent">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <span>{t("news.translateWithAi")}</span>
+                  <span className="rounded bg-purple-100 dark:bg-purple-950/60 px-1.5 py-0.2 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                    Gemini
+                  </span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {locale === "en"
+                    ? "Fill in Thai title & content, then click to auto-generate English translation with Gemini"
+                    : "กรอกข้อมูลภาษาไทย แล้วกดปุ่มนี้เพื่อสร้างภาษาอังกฤษอัตโนมัติด้วย Gemini AI"}
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTranslateWithGemini}
+              disabled={isTranslating || isPending || (!titleTh.trim() && !contentTh.trim())}
+              className="gap-2 text-xs border-purple-500/30 hover:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium shrink-0 cursor-pointer"
+            >
+              {isTranslating ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600 dark:text-purple-400" />
+                  <span>{t("news.translatingWithAi")}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>{t("news.translateWithAi")}</span>
+                </>
+              )}
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <LiyonField label={t("news.titleThField")} htmlFor="news-title-th">
               <input
@@ -507,11 +592,11 @@ export function NewsClient({
             type="button"
             variant="outline"
             onClick={() => setModalOpen(false)}
-            disabled={isPending}
+            disabled={isPending || isTranslating}
           >
             {t("news.cancel")}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={isPending}>
+          <Button type="button" onClick={handleSave} disabled={isPending || isTranslating}>
             {t("news.save")}
           </Button>
         </LiyonDialogFooter>

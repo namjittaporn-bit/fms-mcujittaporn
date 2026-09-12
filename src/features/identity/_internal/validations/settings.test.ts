@@ -180,4 +180,40 @@ describe("updateSettingsSchema", () => {
     });
     expect(resBadUrl.success).toBe(false);
   });
+
+  it("ยอมรับการตั้งค่า Google Gemini AI ที่ถูกต้อง", () => {
+    const res = updateSettingsSchema.safeParse({
+      ...baseValid,
+      gemini: {
+        enabled: true,
+        apiKey: "AIzaSyD-1234567890abcdef",
+        model: "gemini-1.5-flash",
+      },
+    });
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.data.gemini?.enabled).toBe(true);
+      expect(res.data.gemini?.apiKey).toBe("AIzaSyD-1234567890abcdef");
+      expect(res.data.gemini?.model).toBe("gemini-1.5-flash");
+    }
+  });
+
+  it("ยอมรับ gemini เป็น null หรือค่าว่าง", () => {
+    const resNull = updateSettingsSchema.safeParse({
+      ...baseValid,
+      gemini: null,
+    });
+    expect(resNull.success).toBe(true);
+
+    const resEmpty = updateSettingsSchema.safeParse({
+      ...baseValid,
+      gemini: {
+        enabled: false,
+        apiKey: "",
+        model: "gemini-1.5-flash",
+      },
+    });
+    expect(resEmpty.success).toBe(true);
+  });
 });
+

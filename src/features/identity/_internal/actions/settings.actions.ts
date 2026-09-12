@@ -8,13 +8,14 @@ import { zodErrorMap } from "@/shared/lib/i18n/zod-locale";
 import { errors } from "@/shared/lib/errors";
 import { P } from "../../permissions";
 import { requirePermission } from "../rbac";
-import { updateSettingsSchema, testSmtpInputSchema } from "../validations/settings";
+import { updateSettingsSchema, testSmtpInputSchema, testGeminiInputSchema } from "../validations/settings";
 import {
   getTenantSettings,
   updateTenantSettings,
   type TenantSettings,
 } from "../services/tenant.service";
 import { sendMailViaTransport } from "@/shared/lib/infra/mailer";
+import { testGeminiConnection } from "@/shared/lib/infra/gemini";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_MIME_TYPES: Record<string, string> = {
@@ -185,3 +186,50 @@ export async function testSmtpAction(
     };
   });
 }
+
+export async function testGeminiAction(
+  input: unknown
+): Promise<ActionResult<{ success: boolean; message: string; model: string }>> {
+  return runAction(async () => {
+    const ctx = await requirePermission(P.settingsManage);
+    const locale = await getLocale();
+    const isEn = locale === "en";
+    const data = testGeminiInputSchema.parse(input, {
+      error: zodErrorMap(locale),
+    });
+
+    let apiKey = data.gemini.apiKey;
+    if (!apiKey || apiKey.trim() === "") {
+      const current = await getTenantSettings(ctx.tenantId);
+      apiKey = current.gemini?.apiKey || "";
+    }
+
+    if (!apiKey) {
+      throw errors.validation(
+        isEn
+          ? "Please provide Google Gemini API Key to test connection"
+          : "กรุณาระบุ Google Gemini API Key เพื่อทดสอบการเชื่อมต่อ"
+      );
+    }
+
+    try {
+      const model = data.gemini.model || "gemini-1.5-flash";
+      await testGeminiConnection(apiKey, model);
+      return {
+        success: true,
+        model,
+        message: isEn
+          ? `Gemini API connection successful using model "${model}"`
+          : `เชื่อมต่อกับ Google Gemini API (${model}) สำเร็จเรียบร้อยแล้ว`,
+      };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      throw errors.validation(
+        isEn
+          ? `Failed to connect to Gemini API: ${errorMsg}`
+          : `ไม่สามารถเชื่อมต่อกับ Google Gemini API ได้: ${errorMsg}`
+      );
+    }
+  });
+}
+

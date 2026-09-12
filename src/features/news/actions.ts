@@ -4,4 +4,5 @@ export {
   updateNewsAction,
   togglePinNewsAction,
   deleteNewsAction,
+  translateNewsWithGeminiAction,
 } from "./_internal/actions";

@@ -3,7 +3,7 @@ import { prisma, type Db } from "@/shared/lib/infra/prisma";
 import { DEFAULT_PALETTE, isPalette, type PaletteId } from "@/shared/lib/palette";
 import { errors } from "@/shared/lib/errors";
 import { writeAudit } from "../audit";
-import type { UpdateSettingsInput, SmtpSettings, ContactSettings } from "../validations/settings";
+import type { UpdateSettingsInput, SmtpSettings, ContactSettings, GeminiSettings } from "../validations/settings";
 
 export interface TenantSettings {
   code: string;
@@ -13,12 +13,13 @@ export interface TenantSettings {
   palette: PaletteId;
   smtp?: SmtpSettings | null;
   contact?: ContactSettings | null;
+  gemini?: GeminiSettings | null;
 }
 
 async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSettings> {
   const t = await db.tenant.findUnique({ where: { id: tenantId } });
   if (!t) throw errors.not_found();
-  const settings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings } | null) ?? {};
+  const settings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings; gemini?: GeminiSettings } | null) ?? {};
   const p = settings.palette;
   const rawSmtp = settings.smtp;
   let smtp: SmtpSettings | null = null;
@@ -51,6 +52,16 @@ async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSetti
     };
   }
 
+  const rawGemini = settings.gemini;
+  let gemini: GeminiSettings | null = null;
+  if (rawGemini && typeof rawGemini === "object") {
+    gemini = {
+      enabled: Boolean(rawGemini.enabled),
+      apiKey: typeof rawGemini.apiKey === "string" ? rawGemini.apiKey : "",
+      model: typeof rawGemini.model === "string" && rawGemini.model ? rawGemini.model : "gemini-1.5-flash",
+    };
+  }
+
   return {
     code: t.code,
     nameTh: t.nameTh,
@@ -59,6 +70,7 @@ async function readTenantSettings(tenantId: string, db: Db): Promise<TenantSetti
     palette: isPalette(p) ? p : DEFAULT_PALETTE,
     smtp,
     contact,
+    gemini,
   };
 }
 
@@ -66,14 +78,14 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
   return readTenantSettings(tenantId, prisma);
 }
 
-/** เก็บคีย์อื่น ๆ ใน settings JSON ไว้ทั้งหมด — merge palette, smtp และ contact ไม่ทับทั้งก้อน */
+/** เก็บคีย์อื่น ๆ ใน settings JSON ไว้ทั้งหมด — merge palette, smtp, contact และ gemini ไม่ทับทั้งก้อน */
 export async function updateTenantSettings(input: { tenantId: string; actorId: string } & UpdateSettingsInput): Promise<void> {
   await prisma.$transaction(async (tx) => {
     // อ่านผ่าน tx เดียวกัน ไม่ใช่ client กลาง — ไม่งั้นทรานแซกชันนี้กินคอนเนกชันจากพูลเพิ่มอีกเส้นเพื่ออ่าน
     // ค่าเดิม และค่าที่อ่านได้ก็อยู่นอกสแนปช็อตของทรานแซกชัน (ค่า before ของ audit อาจไม่ตรงกับที่กำลังจะทับ)
     const before = await readTenantSettings(input.tenantId, tx);
     const t = await tx.tenant.findUniqueOrThrow({ where: { id: input.tenantId }, select: { settings: true } });
-    const existingSettings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings } | null) ?? {};
+    const existingSettings = (t.settings as { palette?: unknown; smtp?: SmtpSettings; contact?: ContactSettings; gemini?: GeminiSettings } | null) ?? {};
 
     let mergedSmtp: SmtpSettings | null = null;
     if (input.smtp) {
@@ -86,6 +98,15 @@ export async function updateTenantSettings(input: { tenantId: string; actorId: s
 
     const mergedContact = input.contact !== undefined ? input.contact : (existingSettings.contact ?? null);
 
+    let mergedGemini: GeminiSettings | null = null;
+    if (input.gemini) {
+      const existingApiKey = existingSettings.gemini?.apiKey || "";
+      mergedGemini = {
+        ...input.gemini,
+        apiKey: input.gemini.apiKey && input.gemini.apiKey.trim() !== "" ? input.gemini.apiKey.trim() : existingApiKey,
+      };
+    }
+
     await tx.tenant.update({
       where: { id: input.tenantId },
       data: {
@@ -97,6 +118,7 @@ export async function updateTenantSettings(input: { tenantId: string; actorId: s
           palette: input.palette,
           smtp: mergedSmtp,
           contact: mergedContact,
+          gemini: mergedGemini,
         },
       },
     });
@@ -109,6 +131,13 @@ export async function getTenantSmtp(tenantId: string): Promise<SmtpSettings | nu
   const s = (t?.settings as { smtp?: SmtpSettings } | null)?.smtp;
   if (!s || !s.enabled) return null;
   return s;
+}
+
+export async function getTenantGemini(tenantId: string): Promise<GeminiSettings | null> {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+  const g = (t?.settings as { gemini?: GeminiSettings } | null)?.gemini;
+  if (!g || !g.enabled) return null;
+  return g;
 }
 
 export async function getTenantPalette(tenantId: string): Promise<PaletteId> {

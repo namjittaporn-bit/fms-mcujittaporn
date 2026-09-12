@@ -18,6 +18,8 @@ import {
   Clock,
   Globe,
   Share2,
+  Sparkles,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +34,7 @@ import {
   updateSettingsAction,
   uploadLogoAction,
   testSmtpAction,
+  testGeminiAction,
 } from "@/features/identity/actions";
 
 export function SettingsForm({ initial }: { initial: TenantSettings }) {
@@ -74,9 +77,18 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
     googleMapUrl: initial.contact?.googleMapUrl ?? "",
   });
 
+  const [gemini, setGemini] = useState({
+    enabled: initial.gemini?.enabled ?? false,
+    apiKey: "",
+    hasExistingApiKey: Boolean(initial.gemini?.apiKey),
+    model: initial.gemini?.model ?? "gemini-1.5-flash",
+  });
+
   const [showPass, setShowPass] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [testing, setTesting] = useState(false);
+  const [testingGemini, setTestingGemini] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [pending, start] = useTransition();
 
@@ -181,6 +193,37 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
     }
   }
 
+  async function handleTestGemini() {
+    if (!gemini.apiKey.trim() && !gemini.hasExistingApiKey) {
+      toast.error(
+        isEn
+          ? "Please enter Google Gemini API Key"
+          : "กรุณาระบุ Google Gemini API Key"
+      );
+      return;
+    }
+
+    setTestingGemini(true);
+    try {
+      const res = await testGeminiAction({
+        gemini: {
+          enabled: gemini.enabled,
+          apiKey: gemini.apiKey.trim(),
+          model: gemini.model,
+        },
+      });
+      if (res.ok) {
+        toast.success(res.data.message || t("settings.geminiTestSuccess"));
+      } else {
+        toast.error(res.error.message || t("common.error"));
+      }
+    } catch {
+      toast.error(t("common.error"));
+    } finally {
+      setTestingGemini(false);
+    }
+  }
+
   function save() {
     start(async () => {
       const payload = {
@@ -206,6 +249,11 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
           websiteUrl: contact.websiteUrl.trim(),
           googleMapUrl: contact.googleMapUrl.trim(),
         },
+        gemini: {
+          enabled: gemini.enabled,
+          apiKey: gemini.apiKey.trim(),
+          model: gemini.model,
+        },
       };
       const r = await updateSettingsAction(payload);
       if (!r.ok) {
@@ -216,6 +264,9 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
       setErrors({});
       if (smtp.pass.trim()) {
         setSmtp((prev) => ({ ...prev, pass: "", hasExistingPass: true }));
+      }
+      if (gemini.apiKey.trim()) {
+        setGemini((prev) => ({ ...prev, apiKey: "", hasExistingApiKey: true }));
       }
       toast.success(t("settings.saveOk"));
       router.refresh();
@@ -621,6 +672,195 @@ export function SettingsForm({ initial }: { initial: TenantSettings }) {
                   )}
                 </Button>
               </div>
+            </div>
+          </div>
+        </LiyonCard>
+
+        {/* Google Gemini AI Configuration Card */}
+        <LiyonCard className="p-6 space-y-6">
+          <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <h2 className="text-base font-bold text-foreground">
+                  {t("settings.geminiTitle")}
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("settings.geminiDesc")}
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={gemini.enabled}
+                onChange={(e) =>
+                  setGemini({ ...gemini, enabled: e.target.checked })
+                }
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 dark:peer-checked:bg-purple-500"></div>
+            </label>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border/50 space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/50">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">
+                  {t("settings.geminiEnabled")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isEn
+                    ? "Enable Gemini AI for automatic bilingual translation in news and content management"
+                    : "เปิดใช้งานระบบ AI ช่วยแปลเนื้อหาข่าวสารเป็น 2 ภาษาอัตโนมัติ"}
+                </p>
+              </div>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  gemini.enabled
+                    ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    gemini.enabled ? "bg-purple-500 animate-pulse" : "bg-muted-foreground"
+                  }`}
+                />
+                {gemini.enabled
+                  ? isEn
+                    ? "Enabled"
+                    : "เปิดใช้งาน"
+                  : isEn
+                  ? "Disabled"
+                  : "ปิดใช้งาน"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label
+                  htmlFor="s-gemini-key"
+                  className="text-xs font-semibold text-foreground flex items-center justify-between"
+                >
+                  <span>{t("settings.geminiApiKey")}</span>
+                  {gemini.hasExistingApiKey && !gemini.apiKey && (
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-normal flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {isEn ? "Configured" : "ตั้งค่าไว้แล้ว"}
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    id="s-gemini-key"
+                    type={showGeminiKey ? "text" : "password"}
+                    value={gemini.apiKey}
+                    onChange={(e) => setGemini({ ...gemini, apiKey: e.target.value })}
+                    placeholder={
+                      gemini.hasExistingApiKey
+                        ? t("settings.geminiApiKeyKeep")
+                        : t("settings.geminiApiKeyPh")
+                    }
+                    className="w-full pr-10"
+                    disabled={pending}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeminiKey(!showGeminiKey)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showGeminiKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <LiyonField
+                label={t("settings.geminiModel")}
+                htmlFor="s-gemini-model"
+              >
+                <select
+                  id="s-gemini-model"
+                  value={gemini.model}
+                  onChange={(e) => setGemini({ ...gemini, model: e.target.value })}
+                  disabled={pending}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="gemini-1.5-flash">
+                    gemini-1.5-flash ({isEn ? "Fast & Recommended" : "รวดเร็ว แนะนำสำหรับการแปล"})
+                  </option>
+                  <option value="gemini-2.0-flash">
+                    gemini-2.0-flash ({isEn ? "Latest Flash Model" : "โมเดลรุ่นใหม่ล่าสุด"})
+                  </option>
+                  <option value="gemini-1.5-pro">
+                    gemini-1.5-pro ({isEn ? "High Reasoning & Complex" : "วิเคราะห์ขั้นสูง"})
+                  </option>
+                </select>
+              </LiyonField>
+            </div>
+
+            {/* Google AI Studio Guide */}
+            <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-semibold text-purple-700 dark:text-purple-300">
+                <Bot className="h-4 w-4" />
+                <span>{t("settings.geminiApiKeyGuide")}</span>
+              </div>
+              <ul className="list-none space-y-1 text-muted-foreground text-[11px] pl-1">
+                <li>• {t("settings.geminiApiKeyGuideStep1")}</li>
+                <li>• {t("settings.geminiApiKeyGuideStep2")}</li>
+              </ul>
+              <div className="pt-1">
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-medium text-[11px]"
+                >
+                  <Globe className="h-3 w-3" />
+                  <span>aistudio.google.com/app/apikey &rarr;</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Test Gemini Connection Button */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
+              <div className="space-y-0.5">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  {t("settings.geminiTestBtn")}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isEn
+                    ? "Verify that your Gemini API key and selected model are working properly"
+                    : "ทดสอบส่งคำสั่งไปยัง Gemini เพื่อตรวจสอบความถูกต้องของ API Key"}
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTestGemini}
+                disabled={testingGemini || (!gemini.apiKey.trim() && !gemini.hasExistingApiKey)}
+                className="gap-2 text-xs shrink-0"
+              >
+                {testingGemini ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>{t("settings.geminiTesting")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>{t("settings.geminiTestBtn")}</span>
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </LiyonCard>
