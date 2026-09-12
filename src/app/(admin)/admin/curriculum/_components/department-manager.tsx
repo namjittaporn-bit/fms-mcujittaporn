@@ -13,6 +13,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/shared/lib/utils";
 import { useT, useLocale } from "@/shared/lib/i18n/client";
 import {
   LiyonCard,
@@ -41,6 +42,7 @@ interface DepartmentManagerProps {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  onFilterDepartment?: (deptId: string) => void;
 }
 
 export function DepartmentManager({
@@ -49,6 +51,7 @@ export function DepartmentManager({
   canCreate,
   canUpdate,
   canDelete,
+  onFilterDepartment,
 }: DepartmentManagerProps) {
   const t = useT();
   const locale = useLocale();
@@ -165,12 +168,20 @@ export function DepartmentManager({
       key: "programs",
       header: t("department.field.programCount"),
       render: (item) => (
-        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+        <button
+          type="button"
+          onClick={() => onFilterDepartment?.(item.id)}
+          className={cn(
+            "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary transition",
+            onFilterDepartment && "hover:bg-primary/20 hover:scale-105 cursor-pointer"
+          )}
+          title={isEn ? "Click to view programs" : "คลิกเพื่อดูหลักสูตรในภาควิชานี้"}
+        >
           <GraduationCap className="h-3 w-3" />
           <span>
             {item.programCount ?? 0} {isEn ? "programs" : "หลักสูตร"}
           </span>
-        </span>
+        </button>
       ),
     },
     {
@@ -279,9 +290,15 @@ export function DepartmentManager({
             </span>
           }
           renderRowMenu={
-            canUpdate || canDelete
+            canUpdate || canDelete || onFilterDepartment
               ? (item) => (
                   <>
+                    {onFilterDepartment && (
+                      <RowMenuItem onSelect={() => onFilterDepartment(item.id)}>
+                        <GraduationCap className="mr-2 h-4 w-4 text-primary" />
+                        <span>{isEn ? "View Programs" : "ดูหลักสูตรในสังกัด"}</span>
+                      </RowMenuItem>
+                    )}
                     {canUpdate && (
                       <>
                         <RowMenuItem onSelect={() => handleOpenEdit(item)}>

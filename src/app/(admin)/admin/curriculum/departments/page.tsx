@@ -4,27 +4,20 @@ import {
   listAdminPrograms,
   listAdminDepartments,
 } from "@/features/curriculum/server";
-import { CurriculumClient } from "./_components/curriculum-client";
+import { CurriculumClient } from "../_components/curriculum-client";
 
-interface Props {
-  searchParams?: Promise<{ tab?: string }>;
-}
-
-export default async function AdminCurriculumPage({ searchParams }: Props) {
-  const params = await searchParams;
+export default async function AdminCurriculumDepartmentsPage() {
   const ctx = await requirePermission(CURRICULUM_P.curriculumRead);
   const [initialPrograms, departments] = await Promise.all([
     listAdminPrograms(ctx.tenantId),
     listAdminDepartments(ctx.tenantId),
   ]);
 
-  const defaultTab = params?.tab === "departments" ? "departments" : "programs";
-
   return (
     <CurriculumClient
       initialItems={initialPrograms}
       departments={departments}
-      defaultTab={defaultTab}
+      defaultTab="departments"
       canCreate={hasPermission(ctx, CURRICULUM_P.curriculumCreate)}
       canUpdate={hasPermission(ctx, CURRICULUM_P.curriculumUpdate)}
       canDelete={hasPermission(ctx, CURRICULUM_P.curriculumDelete)}

@@ -49,6 +49,7 @@ interface Props {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  defaultTab?: "programs" | "departments";
 }
 
 export function CurriculumClient({
@@ -57,6 +58,7 @@ export function CurriculumClient({
   canCreate,
   canUpdate,
   canDelete,
+  defaultTab = "programs",
 }: Props) {
   const t = useT();
   const locale = useLocale();
@@ -64,7 +66,7 @@ export function CurriculumClient({
 
   const [items, setItems] = useState<CurriculumProgramDto[]>(initialItems);
   const [deptList, setDeptList] = useState<DepartmentDto[]>(departments);
-  const [activeTab, setActiveTab] = useState<"programs" | "departments">("programs");
+  const [activeTab, setActiveTab] = useState<"programs" | "departments">(defaultTab);
   const [isPending, startTransition] = useTransition();
 
   // Filters
@@ -389,6 +391,10 @@ export function CurriculumClient({
           canCreate={canCreate}
           canUpdate={canUpdate}
           canDelete={canDelete}
+          onFilterDepartment={(deptId) => {
+            setDeptFilter(deptId);
+            setActiveTab("programs");
+          }}
         />
       ) : (
         <>
